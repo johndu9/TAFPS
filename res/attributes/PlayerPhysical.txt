@@ -1,0 +1,15 @@
+name0:Dwarf
+advantage0:1
+description0:You happen to be very short. ,You possess a beard and a short stature. 
+name1:Giant
+advantage1:-1
+description1:You are easily spotted. ,You are very tall. 
+name2:Agile
+advantage2:1
+description2:You are very agile. ,You are quick on your feet. 
+name3:Heavy
+advantage3:-1
+description3:You are heavy. ,You cannot see your toes. 
+name4:Flexible
+advantage4:1
+description4:You are flexible. ,Your body can twist better than anyone else. 

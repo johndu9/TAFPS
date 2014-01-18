@@ -1,0 +1,13 @@
+name0:SHOWBOAT
+advantage0:-1
+description0:You love to show off. ,Your love of life is almost as intense as your love for attention. 
+name1:ANTISOCIAL
+advantage1:1
+description1:You are often alone and happen to be good at hiding from others. ,You like to avoid people. 
+name2:LAZY
+advantage2:-1
+description2:You enjoy taking your time. ,You like to take leisurely strolls. 
+name3:WITTY
+advantage3:1
+description3:You are a quick thinker. ,You have an agile mind. 
+	

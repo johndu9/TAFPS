@@ -15,6 +15,7 @@ import com.johndu9.tafps.Network.InfoMessage;
 import com.johndu9.tafps.Network.Join;
 import com.johndu9.tafps.Network.Resume;
 import com.johndu9.tafps.Network.Wait;
+import com.johndu9.tafps.room.Attribute;
 
 public class TAFPSServer {
 	
@@ -195,7 +196,7 @@ public class TAFPSServer {
 			sendDescription(player, map.getRoom(player.getX() + x, player.getY() + y).getDescription());
 		}
 		Log.info(LOG_CATEGORY,
-			"Player " + player.id + ": move (" + player.getX() + "," + player.getY() + ") to"
+			"Player " + player.id + ": move (" + player.getX() + "," + player.getY() + ") to "
 			+ "(" + (player.getX() + x) + "," + (player.getY() + y) + ")");
 		player.move(x, y);
 		List<Player> playersAtDestination = getPlayersOn(player.getX(), player.getY());
@@ -243,7 +244,9 @@ public class TAFPSServer {
 		info.message =
 			"Direction: " + Player.DIRECTIONS[player.getDirection()] +
 			"  /  Location: (" + player.getX() + ", " + player.getY() + ")" +
-			"  /  Ammunition: " + player.getAmmo();
+			"  /  Ammunition: " + player.getAmmo() + 
+			"  /  Advantage: " + player.getAdvantage() +
+			"  /  Room Bonus: " + map.getRoom(player.getX(), player.getY()).getAdvantage();
 		server.sendToTCP(player.id, info);
 	}
 	
@@ -252,6 +255,7 @@ public class TAFPSServer {
 	}
 	
 	public static void main(String[] args) throws IOException {
+		Attribute.build();
 		if (args.length == 3) {
 			new TAFPSServer(Integer.parseInt(args[0]), Integer.parseInt(args[1]), args[2]);
 		} else {

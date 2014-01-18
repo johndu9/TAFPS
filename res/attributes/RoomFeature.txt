@@ -1,0 +1,15 @@
+name0:Ruined
+advantage0:1
+description0:This room looks dead and long abandoned. ,Whatever was here left long ago. ,Everything here lies ruined. ,The dust lies mostly settled. It has been a while since someone was here. 
+name1:Pillars
+advantage1:1
+description1:There are several pillars that can provide cover. ,You find strange pillars. Useful for cover. ,The pillars may have held things up before. Now they don't. ,Broken pillars lie scattered but some still stand.
+name2:Rotten
+advantage2:-1
+description2:The rotten stench distracts you. ,You are immediately taken aback by the room's smell. ,Your nose can barely handle the odor. ,It smells like something died here a long time ago. 
+name3:Frozen
+advantage3:-2
+description3:The floor is iced over. ,The ground is slippery and frozen. ,You nearly slip on ice as you enter the room. ,You notice that you can see your breath. The room seems frozen over. 
+name4:Smoking
+advantage4:2
+description4:You can hardly see a thing in the smoke. ,Everything is obscured by the thick smoke. ,Your senses seem instantly obscured by the smoke when you enter. ,You have never seen smoke this thick. 

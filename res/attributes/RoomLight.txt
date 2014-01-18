@@ -1,0 +1,9 @@
+name0:DARK
+advantage0:2
+description0:The room is dark. ,It is pitch black. You are likely to be shot. ,You stumble a little as you enter the dark room. ,It is nearly impossible to see anything in this darkness. 
+name2:Dim
+advantage2:1
+description2:The room is dim. ,Some lights flicker. But most stay off. ,There are more broken bulbs on the ground than there are on the ceiling. ,You need to squint to see in this darkness. 
+name1:BRIGHT
+advantage1:0
+description1:The room is well lit. ,The flickering lights light the room fairly well. ,The scattered light bulbs somehow completely illuminate the room. ,The brightness of the room's lights nearly blinds you. 

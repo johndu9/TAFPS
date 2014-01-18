@@ -27,10 +27,7 @@ public class Map {
 	}
 	
 	private Room buildRoom() {
-		Attribute[] attributes = new Attribute[Attribute.ROOM_ATTRIBUTES.length];
-		for (int i = 0; i < Attribute.ROOM_ATTRIBUTES.length; i++) {
-			attributes[i] = Attribute.ROOM_ATTRIBUTES[i][rng.nextInt(Attribute.ROOM_ATTRIBUTES[i].length)];
-		}
+		Attribute[] attributes = Attribute.getAttributes(Attribute.ROOM_ATTRIBUTES, rng);
 		return new Room(attributes, rng);
 	}
 }

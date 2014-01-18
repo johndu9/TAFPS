@@ -87,10 +87,7 @@ public class Player {
 	}
 	
 	private void build() {
-		attributes = new Attribute[Attribute.PLAYER_ATTRIBUTES.length];
-		for (int i = 0; i < Attribute.PLAYER_ATTRIBUTES.length; i++) {
-			attributes[i] = Attribute.PLAYER_ATTRIBUTES[i][rng.nextInt(Attribute.PLAYER_ATTRIBUTES[i].length)];
-		}
+		attributes = Attribute.getAttributes(Attribute.PLAYER_ATTRIBUTES, rng);
 		for (Attribute attribute : attributes) {
 			description += attribute.getDescription(rng.nextInt(attribute.getDesciptionCount()));
 			advantage += attribute.getAdvantage();

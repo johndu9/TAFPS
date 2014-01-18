@@ -1,0 +1,12 @@
+name0:Hall
+advantage0:-1
+description0:You see a hallway before you. ,This hallway is likely hard to dodge in., You enter a long hall. ,You walk into a hall. 
+name1:Open
+advantage1:0
+description1:This room is completely open. ,The room is wide open for all sorts of activity. ,You enter a vast and open room. ,You walk into a large and bare room. 
+name2:Cluttered
+advantage2:2
+description2:The room is littered with all sorts of clutter. ,It is messy in here. And the mess may likely provide cover. ,There is trash everywhere. Great for catching wayward bullets. ,Tactical messiness. 
+name3:Garden
+advantage3:1
+description3:You enter a garden. ,The plants here can act as cover. ,The variety of flowers surprises you. But they won't last long. ,There are very many species of flora. If only it mattered. 
