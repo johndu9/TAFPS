@@ -11,6 +11,8 @@ public class Player {
 	private int y;
 	private int direction;
 	private int ammo;
+	public long lastMoveTime;
+	public boolean waiting = false;
 	private Attribute[] attributes;
 	private String description = "";
 	private int advantage = 0;
@@ -28,6 +30,7 @@ public class Player {
 		this.rng = rng;
 		build();
 		this.id = id;
+		lastMoveTime = System.currentTimeMillis();
 	}
 	
 	public int getX() {

@@ -11,11 +11,19 @@ public class Network {
 	public static void register(EndPoint endPoint) {
 		Kryo kryo = endPoint.getKryo();
 		kryo.register(Join.class);
+		kryo.register(Wait.class);
+		kryo.register(Resume.class);
 		kryo.register(ActionMessage.class);
 		kryo.register(DescriptionMessage.class);
 	}
 	
 	public static class Join {
+	}
+
+	public static class Wait {
+	}
+	
+	public static class Resume {
 	}
 	
 	public static class ActionMessage {

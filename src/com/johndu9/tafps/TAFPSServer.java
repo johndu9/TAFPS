@@ -8,9 +8,12 @@ import java.util.Random;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
+import com.esotericsoftware.minlog.Log;
 import com.johndu9.tafps.Network.ActionMessage;
 import com.johndu9.tafps.Network.DescriptionMessage;
 import com.johndu9.tafps.Network.Join;
+import com.johndu9.tafps.Network.Resume;
+import com.johndu9.tafps.Network.Wait;
 
 public class TAFPSServer {
 	
@@ -18,6 +21,8 @@ public class TAFPSServer {
 	private final Random rng;
 	private Map map;
 	private List<Player> players = new LinkedList<Player>();
+	private final int turnTime;
+	private static final String LOG_CATEGORY = "TAFPS";
 	private static final String[] MISS = new String[]{
 		"You missed your shot.",
 		"You shoot. And you miss.",
@@ -67,13 +72,14 @@ public class TAFPSServer {
 		"You shoot the ceiling. Do you hate ceilings?"
 	};
 	
-	public TAFPSServer(int size, String seed) throws IOException {
+	public TAFPSServer(int size, int turnDelay, String seed) throws IOException {
 		server = new Server() {
 			protected Connection newConnection() {
 				return new ClientConnection();
 			}
 		};
 		rng = new Random(seed.hashCode());
+		turnTime = turnDelay;
 		map = new Map(size, rng);
 		Network.register(server);
 		server.addListener(new Listener() {
@@ -86,6 +92,7 @@ public class TAFPSServer {
 				if (object instanceof ActionMessage) {
 					String action = ((ActionMessage)object).message;
 					Player player = findPlayer(c.getID());
+					Log.info(LOG_CATEGORY, "Player " + c.getID() + ": " + action);
 					switch (action) {
 					case "tr":
 						player.turnRight();
@@ -108,6 +115,20 @@ public class TAFPSServer {
 					case "f":
 						combat(player);
 						break;
+					}
+					server.sendToTCP(player.id, new Wait());
+					player.waiting = true;
+					player.lastMoveTime = System.currentTimeMillis();
+					return;
+				}
+				if (object instanceof Resume) {
+					Player player = findPlayer(c.getID());
+					if (player.waiting && System.currentTimeMillis() >= player.lastMoveTime + turnTime) {
+						server.sendToTCP(player.id, new Resume());
+						player.waiting = false;
+					} else if (player.waiting) {
+						server.sendToTCP(player.id, new Wait());
+						player.waiting = true;
 					}
 					return;
 				}
@@ -134,10 +155,13 @@ public class TAFPSServer {
 		for (Player player : playersAtDestination) {
 			int x = player.getX();
 			int y = player.getY();
-			if (!player.equals(attacker) && x == attacker.getX() && y == attacker.getY()) {
-				if (attacker.getAmmo() != 0 &&
-					attacker.getAdvantage() + rng.nextInt(6) <=
-					player.getAdvantage() + map.getRoom(x, y).getAdvantage() + rng.nextInt(6)) {
+			if (!player.equals(attacker)) {
+				int attackerAdvantage = attacker.getAdvantage() + rng.nextInt(6);
+				int defenderAdvantage = player.getAdvantage() + map.getRoom(x, y).getAdvantage() + rng.nextInt(6);
+				Log.info(LOG_CATEGORY,
+					"Player " + attacker.id + ": attack (" + attackerAdvantage + ") to "
+					+ "Player " + player.id + " (" + defenderAdvantage + ")");
+				if (attacker.getAmmo() != 0 && attackerAdvantage <= defenderAdvantage) {
 					sendDescription(attacker, MISS[rng.nextInt(MISS.length)]);
 					sendDescription(player, SHOT_AT[rng.nextInt(SHOT_AT.length)]);
 				} else {
@@ -146,6 +170,7 @@ public class TAFPSServer {
 					int playerID = player.id;
 					player = buildPlayer(playerID);
 				}
+				break;
 			}
 		}
 	}
@@ -168,6 +193,9 @@ public class TAFPSServer {
 		} else {
 			sendDescription(player, map.getRoom(player.getX() + x, player.getY() + y).getDescription());
 		}
+		Log.info(LOG_CATEGORY,
+			"Player " + player.id + ": move (" + player.getX() + "," + player.getY() + ") to"
+			+ "(" + player.getX() + x + "," + player.getY() + y + ")");
 		player.move(x, y);
 		List<Player> playersAtDestination = getPlayersOn(player.getX(), player.getY());
 		if (playersAtDestination.size() > 1) {
@@ -175,10 +203,6 @@ public class TAFPSServer {
 				sendDescription(roommate, PRESENT[rng.nextInt(PRESENT.length)]);
 			}
 		}
-		System.out.println(
-			player.getDirection() + "," + movementDirection + "," + Math.toDegrees(direction) +
-			"(" + x + "," + y + ")" +
-			"/(" + player.getX() + "," + player.getY() + ")");
 	}
 	
 	public List<Player> getPlayersOn(int x, int y) {
@@ -217,11 +241,10 @@ public class TAFPSServer {
 	}
 	
 	public static void main(String[] args) throws IOException {
-		System.out.println("Server begin");
-		if (args.length == 2) {
-			new TAFPSServer(Integer.parseInt(args[0]), args[1]);
+		if (args.length == 3) {
+			new TAFPSServer(Integer.parseInt(args[0]), Integer.parseInt(args[1]), args[2]);
 		} else {
-			new TAFPSServer(5, "TAFPS");
+			new TAFPSServer(5, 2000, "TAFPS");
 		}
 	}
 }

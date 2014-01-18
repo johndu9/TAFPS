@@ -21,6 +21,8 @@ import com.esotericsoftware.kryonet.Listener;
 import com.johndu9.tafps.Network.ActionMessage;
 import com.johndu9.tafps.Network.DescriptionMessage;
 import com.johndu9.tafps.Network.Join;
+import com.johndu9.tafps.Network.Resume;
+import com.johndu9.tafps.Network.Wait;
 
 @SuppressWarnings("serial")
 public class TAFPSClient extends JFrame implements MouseListener, MouseMotionListener, KeyListener{
@@ -35,6 +37,7 @@ public class TAFPSClient extends JFrame implements MouseListener, MouseMotionLis
 	private final int width;
 	private final int height;
 	private final String host;
+	private boolean waiting = false;
 	private Robot robot;
 	
 	private Client client;
@@ -92,6 +95,21 @@ public class TAFPSClient extends JFrame implements MouseListener, MouseMotionLis
 					appendln(description.message);
 					return;
 				}
+				if (object instanceof Wait) {
+					waiting = true;
+					try {
+						System.out.println("Let's try this");
+						Thread.sleep(1000);
+						client.sendUDP(new Resume());
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					return;
+				}
+				if (object instanceof Resume) {
+					waiting = false;
+					return;
+				}
 			}
 
 			public void disconnected (Connection c) {
@@ -143,7 +161,9 @@ public class TAFPSClient extends JFrame implements MouseListener, MouseMotionLis
 	}
 	
 	public void appendln(String string) {
-		append(string + "\n");
+		if (!waiting) {
+			append(string + "\n");
+		}
 	}
 
 	@Override
@@ -204,9 +224,11 @@ public class TAFPSClient extends JFrame implements MouseListener, MouseMotionLis
 	}
 	
 	public void sendAction(String action) {
-		ActionMessage act = new ActionMessage();
-		act.message = action;
-		client.sendUDP(act);
+		if (!waiting) {
+			ActionMessage act = new ActionMessage();
+			act.message = action;
+			client.sendUDP(act);
+		}
 	}
 	
     public static void main(String[] args) {
