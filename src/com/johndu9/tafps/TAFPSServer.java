@@ -11,6 +11,7 @@ import com.esotericsoftware.kryonet.Server;
 import com.esotericsoftware.minlog.Log;
 import com.johndu9.tafps.Network.ActionMessage;
 import com.johndu9.tafps.Network.DescriptionMessage;
+import com.johndu9.tafps.Network.InfoMessage;
 import com.johndu9.tafps.Network.Join;
 import com.johndu9.tafps.Network.Resume;
 import com.johndu9.tafps.Network.Wait;
@@ -116,6 +117,7 @@ public class TAFPSServer {
 						combat(player);
 						break;
 					}
+					sendInfo(player);
 					server.sendToTCP(player.id, new Wait());
 					player.waiting = true;
 					player.lastMoveTime = System.currentTimeMillis();
@@ -147,7 +149,6 @@ public class TAFPSServer {
 			sendDescription(attacker, EMPTY[rng.nextInt(EMPTY.length)]);
 		} else {
 			attacker.shoot();
-			sendDescription(attacker, "You have " + attacker.getAmmo() + " shots left.");
 		}
 		if (playersAtDestination.size() == 1) {
 			sendDescription(attacker, NOBODY[rng.nextInt(NOBODY.length)]);
@@ -195,7 +196,7 @@ public class TAFPSServer {
 		}
 		Log.info(LOG_CATEGORY,
 			"Player " + player.id + ": move (" + player.getX() + "," + player.getY() + ") to"
-			+ "(" + player.getX() + x + "," + player.getY() + y + ")");
+			+ "(" + (player.getX() + x) + "," + (player.getY() + y) + ")");
 		player.move(x, y);
 		List<Player> playersAtDestination = getPlayersOn(player.getX(), player.getY());
 		if (playersAtDestination.size() > 1) {
@@ -218,6 +219,7 @@ public class TAFPSServer {
 	public Player buildPlayer(int id) {
 		Player newPlayer = new Player(rng.nextInt(map.size), rng.nextInt(map.size), id, rng);
 		sendDescription(newPlayer, "You enter a new void.\n" + newPlayer.getDescription());
+		sendInfo(newPlayer);
 		return newPlayer;
 	}
 	
@@ -234,6 +236,15 @@ public class TAFPSServer {
 		DescriptionMessage send = new DescriptionMessage();
 		send.message = description;
 		server.sendToTCP(player.id, send);
+	}
+	
+	public void sendInfo(Player player) {
+		InfoMessage info = new InfoMessage();
+		info.message =
+			"Direction: " + Player.DIRECTIONS[player.getDirection()] +
+			"  /  Location: (" + player.getX() + ", " + player.getY() + ")" +
+			"  /  Ammunition: " + player.getAmmo();
+		server.sendToTCP(player.id, info);
 	}
 	
 	public static class ClientConnection extends Connection {

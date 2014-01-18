@@ -22,6 +22,7 @@ public class Player {
 	public static final int NORTH = 1;
 	public static final int WEST = 2;
 	public static final int SOUTH = 3;
+	public static final String[] DIRECTIONS = new String[]{"EAST", "NORTH", "WEST", "SOUTH"};
 	
 	public Player(int x, int y, int id, Random rng) {
 		move(x, y);

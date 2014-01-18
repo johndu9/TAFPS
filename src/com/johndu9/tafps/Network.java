@@ -15,6 +15,7 @@ public class Network {
 		kryo.register(Resume.class);
 		kryo.register(ActionMessage.class);
 		kryo.register(DescriptionMessage.class);
+		kryo.register(InfoMessage.class);
 	}
 	
 	public static class Join {
@@ -31,6 +32,10 @@ public class Network {
 	}
 	
 	public static class DescriptionMessage {
+		public String message;
+	}
+	
+	public static class InfoMessage {
 		public String message;
 	}
 	

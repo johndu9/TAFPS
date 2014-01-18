@@ -20,6 +20,7 @@ import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.johndu9.tafps.Network.ActionMessage;
 import com.johndu9.tafps.Network.DescriptionMessage;
+import com.johndu9.tafps.Network.InfoMessage;
 import com.johndu9.tafps.Network.Join;
 import com.johndu9.tafps.Network.Resume;
 import com.johndu9.tafps.Network.Wait;
@@ -27,8 +28,8 @@ import com.johndu9.tafps.Network.Wait;
 @SuppressWarnings("serial")
 public class TAFPSClient extends JFrame implements MouseListener, MouseMotionListener, KeyListener{
 
-	private JTextField debug = new JTextField("");
-	private JTextArea output = new JTextArea("You appear in an empty void. Everything is dark.\n");
+	private JTextField infoField = new JTextField("");
+	private JTextArea outputArea = new JTextArea("You appear in an empty void. Everything is dark.\n");
 	private JScrollPane scroll;
 	private int oldX = 0;
 	private int addedX = 0;
@@ -60,18 +61,19 @@ public class TAFPSClient extends JFrame implements MouseListener, MouseMotionLis
         getRootPane().putClientProperty("apple.awt.draggableWindowBackground", false);
         setFocusable(true);
         getContentPane().setLayout(new java.awt.BorderLayout(0, 360));
-        debug.setEditable(false);
-        debug.setBackground(new Color(0, 0, 0, 255));
-        debug.setForeground(new Color(255, 255, 255, 255));
-        debug.setBorder(null);
-        output.setEditable(false);
-        output.setBackground(new Color(0, 0, 0, 255));
-        output.setForeground(new Color(255, 255, 255, 255));
-        output.setBorder(null);
-        output.setLineWrap(true);
-        getContentPane().add(debug, java.awt.BorderLayout.NORTH);
-        getContentPane().add(output, java.awt.BorderLayout.CENTER);
-        scroll = new JScrollPane(output,JScrollPane.VERTICAL_SCROLLBAR_NEVER,JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        infoField.setEditable(false);
+        infoField.setBackground(new Color(0, 0, 0, 255));
+        infoField.setForeground(new Color(255, 255, 255, 255));
+        infoField.setBorder(null);
+        infoField.setHorizontalAlignment(JTextField.CENTER);
+        outputArea.setEditable(false);
+        outputArea.setBackground(new Color(0, 0, 0, 255));
+        outputArea.setForeground(new Color(255, 255, 255, 255));
+        outputArea.setBorder(null);
+        outputArea.setLineWrap(true);
+        getContentPane().add(infoField, java.awt.BorderLayout.NORTH);
+        getContentPane().add(outputArea, java.awt.BorderLayout.CENTER);
+        scroll = new JScrollPane(outputArea,JScrollPane.VERTICAL_SCROLLBAR_NEVER,JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scroll.setBorder(null);
         getContentPane().add(scroll);
         setVisible(true);
@@ -90,6 +92,11 @@ public class TAFPSClient extends JFrame implements MouseListener, MouseMotionLis
 			}
 
 			public void received (Connection c, Object object) {
+				if (object instanceof InfoMessage) {
+					InfoMessage info = (InfoMessage)object;
+					infoField.setText(info.message);
+					return;
+				}
 				if (object instanceof DescriptionMessage) {
 					DescriptionMessage description = (DescriptionMessage)object;
 					appendln(description.message);
@@ -98,7 +105,6 @@ public class TAFPSClient extends JFrame implements MouseListener, MouseMotionLis
 				if (object instanceof Wait) {
 					waiting = true;
 					try {
-						System.out.println("Let's try this");
 						Thread.sleep(1000);
 						client.sendUDP(new Resume());
 					} catch (InterruptedException e) {
@@ -156,8 +162,8 @@ public class TAFPSClient extends JFrame implements MouseListener, MouseMotionLis
 	}
 	
 	public void append(String string) {
-		output.append(string);
-        output.setCaretPosition(output.getDocument().getLength());
+		outputArea.append(string);
+        outputArea.setCaretPosition(outputArea.getDocument().getLength());
 	}
 	
 	public void appendln(String string) {
