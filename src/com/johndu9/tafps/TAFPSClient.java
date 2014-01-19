@@ -44,7 +44,7 @@ public class TAFPSClient extends JFrame implements MouseListener, MouseMotionLis
 	
 	private Client client;
 	
-	public TAFPSClient(String server) {
+	public TAFPSClient(String server, boolean undecorated) {
 		super("TAFPS");
 		try {
 			robot = new Robot();
@@ -55,13 +55,15 @@ public class TAFPSClient extends JFrame implements MouseListener, MouseMotionLis
 		width = getGraphicsConfiguration().getBounds().width;
 		height = getGraphicsConfiguration().getBounds().height;
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setUndecorated(true);
-		setBackground(new Color(0, 0, 0, 128));
+		setUndecorated(undecorated);
+		if (isUndecorated()) {
+			setBackground(new Color(0, 0, 0, 128));
+		}
         setSize(new Dimension(640, 480));
         setLocationRelativeTo(null);
         getRootPane().putClientProperty("apple.awt.draggableWindowBackground", false);
         setFocusable(true);
-        getContentPane().setLayout(new java.awt.BorderLayout(0, 368));
+        getContentPane().setLayout(new java.awt.BorderLayout(0, 312 + ((isUndecorated()) ? (56) : (0))));
         infoField.setEditable(false);
         infoField.setBackground(new Color(0, 0, 0, 255));
         infoField.setForeground(new Color(255, 255, 255, 255));
@@ -261,6 +263,6 @@ public class TAFPSClient extends JFrame implements MouseListener, MouseMotionLis
     	} else {
     		host = "localhost";
     	}
-    	new TAFPSClient(host);
+    	new TAFPSClient(host, false);
     }
 }
