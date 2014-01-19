@@ -36,8 +36,6 @@ public class TAFPSClient extends JFrame implements MouseListener, MouseMotionLis
 	private int addedX = 0;
 	private char oldChar = 0;
 	private char newChar = 0;
-	private final int width;
-	private final int height;
 	private final String host;
 	private boolean waiting = false;
 	private Robot robot;
@@ -52,8 +50,6 @@ public class TAFPSClient extends JFrame implements MouseListener, MouseMotionLis
 			e.printStackTrace();
 		}
 		this.host = server;
-		width = getGraphicsConfiguration().getBounds().width;
-		height = getGraphicsConfiguration().getBounds().height;
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setUndecorated(undecorated);
 		if (isUndecorated()) {
@@ -172,7 +168,7 @@ public class TAFPSClient extends JFrame implements MouseListener, MouseMotionLis
 			appendln("You turn left.");
 			sendAction("tl");
 		}
-		robot.mouseMove(width / 2, height / 2);
+		robot.mouseMove(getX() + getWidth() / 2, getY() + getHeight() / 2);
 	}
 	
 	public void append(String string) {
@@ -258,11 +254,15 @@ public class TAFPSClient extends JFrame implements MouseListener, MouseMotionLis
 	
     public static void main(String[] args) {
     	String host;
-    	if (args.length == 1) {
+    	boolean undecorated = false;
+    	if (args.length == 2) {
+    		host = args[0];
+    		undecorated = Boolean.parseBoolean(args[1]);
+    	} else if (args.length == 1) {
     		host = args[0];
     	} else {
     		host = "localhost";
     	}
-    	new TAFPSClient(host, false);
+    	new TAFPSClient(host, undecorated);
     }
 }
