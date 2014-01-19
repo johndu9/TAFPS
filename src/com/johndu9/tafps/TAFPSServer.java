@@ -23,8 +23,10 @@ public class TAFPSServer {
 	private final Random rng;
 	private Map map;
 	private List<Player> players = new LinkedList<Player>();
+	private List<Player> savages = new LinkedList<Player>();
 	private final int turnTime;
 	private static final String LOG_CATEGORY = "TAFPS";
+	private static final int SAVAGE_ID = -1;
 	private static final String[] SHOT_AT = new String[]{
 		"You are shot at.",
 		"A bullet whizzes by your head.",
@@ -87,6 +89,11 @@ public class TAFPSServer {
 		rng = new Random(seed.hashCode());
 		turnTime = turnDelay;
 		map = new Map(size, rng);
+		for (int i = 0; i < size * 2; i++) {
+			Player savage = buildPlayer(SAVAGE_ID);
+			savage.setAmmo(3);
+			savages.add(savage);
+		}
 		Network.register(server);
 		server.addListener(new Listener() {
 			public void received (Connection c, Object object) {
@@ -156,14 +163,20 @@ public class TAFPSServer {
 		int x = attacker.getX();
 		int y = attacker.getY();
 		Player defender = null;
-		List<Player> players = getPlayersOn(x, y);
-		for (Player player : players) {
-			if (player != attacker) {
-				defender = player;
-				break;
+		List<Player> savages = getSavagesOn(x, y);
+		if (savages.size() > 0) {
+			defender = savages.get(0);
+		} else {
+			List<Player> players = getPlayersOn(x, y);
+			for (Player player : players) {
+				if (player != attacker) {
+					defender = player;
+					break;
+				}
 			}
 		}
 		if (defender == null) {
+			attacker.shoot();
 			sendDescription(attacker, NOBODY[rng.nextInt(NOBODY.length)]);
 			return;
 		}
@@ -178,7 +191,8 @@ public class TAFPSServer {
 		int attackAdvantage =
 			attacker.getAdvantage() + rng.nextInt(4) + ((attackShot) ? (2) : (0));
 		int defendAdvantage =
-			defender.getAdvantage() + map.getRoom(x, y).getAdvantage() + rng.nextInt(4) + ((defendShot) ? (2) : (0));
+			defender.getAdvantage() + map.getRoom(x, y).getAdvantage() + rng.nextInt(4) + ((defendShot) ? (2) : (0)) +
+			((defender.id == SAVAGE_ID) ? (-2) : (0));
 		Log.info(LOG_CATEGORY, 
 			"Player " + attacker.id + " (" + attackAdvantage + ") against " +
 			"Player " + defender.id + " (" + defendAdvantage + ")");
@@ -190,8 +204,12 @@ public class TAFPSServer {
 			}
 			sendDescription(defender, DEATH[rng.nextInt(DEATH.length)]);
 			attacker.setAmmo(attacker.getAmmo() + defender.getAmmo());
-			server.sendToTCP(defender.id, new Death());
-			players.remove(defender);
+			if (defender.id == SAVAGE_ID) {
+				this.savages.remove(defender);
+			} else {
+				server.sendToTCP(defender.id, new Death());
+				players.remove(defender);
+			}
 			sendInfo(attacker);
 		} else if (defendAdvantage > attackAdvantage + 2) {
 			if (defendShot) {
@@ -241,21 +259,29 @@ public class TAFPSServer {
 			+ "(" + (player.getX() + x) + "," + (player.getY() + y) + ")");
 		player.move(x, y);
 		List<Player> playersAtDestination = getPlayersOn(player.getX(), player.getY());
-		if (playersAtDestination.size() > 1) {
+		if (playersAtDestination.size() > 1 || getSavagesOn(player.getX(), player.getY()).size() > 0) {
 			for (Player roommate : playersAtDestination) {
 				sendDescription(roommate, PRESENT[rng.nextInt(PRESENT.length)]);
 			}
 		}
 	}
 	
-	public List<Player> getPlayersOn(int x, int y) {
-		List<Player> roommates = new LinkedList<Player>();
-		for (Player player : players) {
+	private List<Player> getListOn(int x, int y, List<Player> list) {
+		List<Player> players = new LinkedList<Player>();
+		for (Player player : list) {
 			if (player.getX() == x && player.getY() == y) {
-				roommates.add(player);
+				players.add(player);
 			}
 		}
-		return roommates;
+		return players;
+	}
+	
+	public List<Player> getPlayersOn(int x, int y) {
+		return getListOn(x, y, players);
+	}
+	
+	public List<Player> getSavagesOn(int x, int y) {
+		return getListOn(x, y, savages);
 	}
 	
 	public Player buildPlayer(int id) {
@@ -283,10 +309,11 @@ public class TAFPSServer {
 		info.message =
 			Player.DIRECTIONS[player.getDirection()] +
 			"  /  Location: (" + player.getX() + ", " + player.getY() + ")" +
-			"  /  Ammo: " + player.getAmmo() + 
+			"  /  Ammunition: " + player.getAmmo() + 
 			"  /  Advantage: " + player.getAdvantage() +
 			"  /  Room Bonus: " + map.getRoom(player.getX(), player.getY()).getAdvantage() +
-			"  /  Humans: " + getPlayersOn(player.getX(), player.getY()).size();
+			"  /  Humans: " + getPlayersOn(player.getX(), player.getY()).size() + 
+			"  /  Savages: " + getSavagesOn(player.getX(), player.getY()).size();
 		server.sendToTCP(player.id, info);
 	}
 	
@@ -299,7 +326,7 @@ public class TAFPSServer {
 		if (args.length == 3) {
 			new TAFPSServer(Integer.parseInt(args[0]), Integer.parseInt(args[1]), args[2]);
 		} else {
-			new TAFPSServer(5, 2000, "TAFPS");
+			new TAFPSServer(5, 1000, "TAFPS");
 		}
 	}
 }

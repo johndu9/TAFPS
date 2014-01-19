@@ -61,7 +61,7 @@ public class TAFPSClient extends JFrame implements MouseListener, MouseMotionLis
         setLocationRelativeTo(null);
         getRootPane().putClientProperty("apple.awt.draggableWindowBackground", false);
         setFocusable(true);
-        getContentPane().setLayout(new java.awt.BorderLayout(0, 360));
+        getContentPane().setLayout(new java.awt.BorderLayout(0, 368));
         infoField.setEditable(false);
         infoField.setBackground(new Color(0, 0, 0, 255));
         infoField.setForeground(new Color(255, 255, 255, 255));
