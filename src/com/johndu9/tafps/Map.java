@@ -2,9 +2,6 @@ package com.johndu9.tafps;
 
 import java.util.Random;
 
-import com.johndu9.tafps.room.Attribute;
-import com.johndu9.tafps.room.Room;
-
 public class Map {
 	
 	private Room[][] rooms;

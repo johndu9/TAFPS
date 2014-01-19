@@ -10,12 +10,12 @@ import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
 import com.esotericsoftware.minlog.Log;
 import com.johndu9.tafps.Network.ActionMessage;
+import com.johndu9.tafps.Network.Death;
 import com.johndu9.tafps.Network.DescriptionMessage;
 import com.johndu9.tafps.Network.InfoMessage;
 import com.johndu9.tafps.Network.Join;
 import com.johndu9.tafps.Network.Resume;
 import com.johndu9.tafps.Network.Wait;
-import com.johndu9.tafps.room.Attribute;
 
 public class TAFPSServer {
 	
@@ -25,17 +25,17 @@ public class TAFPSServer {
 	private List<Player> players = new LinkedList<Player>();
 	private final int turnTime;
 	private static final String LOG_CATEGORY = "TAFPS";
-	private static final String[] MISS = new String[]{
-		"You missed your shot.",
-		"You shoot. And you miss.",
-		"Your target eludes your bullet.",
-		"Your prey escapes death."
-	};
 	private static final String[] SHOT_AT = new String[]{
 		"You are shot at.",
 		"A bullet whizzes by your head.",
 		"You barely dodge death and a bullet.",
 		"A bullet grazes your shoulder."
+	};
+	private static final String[] PUNCHED_AT = new String[]{
+		"You take a punch, but it isn't enough to knock you out.",
+		"You get kicked in the face, but you get back up.",
+		"A punch flies at your face, but you block it.",
+		"You dodge a series of attacks."
 	};
 	private static final String[] WALL = new String[]{
 		"You run into a dead end.",
@@ -49,29 +49,33 @@ public class TAFPSServer {
 		"You attempt to phase through the wall. It doesn't work"
 	};
 	private static final String[] PRESENT = new String[]{
-		"You sense others. You see them, too.",
+		"You sense others. You see them, too. And they see you.",
 		"There are others present.",
-		"You found survivors. Not for long."
+		"You found survivors. Not for long.",
+		"You hear footsteps and encounter survivors."
 	};
-	private static final String[] EMPTY = new String[]{
-		"You're out of shots.",
-		"You attempt to fire only to realize you've run out of ammunition.",
-		"You shoot. Or try to. You're out of ammo."
-	};
-	private static final String[] KILL = new String[]{
+	private static final String[] KILL_SHOT = new String[]{
 		"You shoot at and kill the other survivor.",
 		"The other survivor collapses, dead as stone.",
-		"One shot, one kill"
+		"One shot, one kill.",
+		"The survivor takes the last shot to the heart and falls to the ground."
+	};
+	private static final String[] KILL_PUNCH = new String[]{
+		"With a crack of his neck, the other survivor falls dead.",
+		"Your final blow knocks your enemy against the wall. He doesn't get up.",
+		"One last kick breaks your foe's spine and kills the survivor.",
+		"The survivor crumples under your punch."
 	};
 	private static final String[] DEATH = new String[]{
-		"You have been shot and reincarnate elsewhere.",
+		"You have been killed and reincarnate elsewhere.",
 		"You die. However, you have been reborn somewhere else.",
 		"The gods gave and the gods have taken away. But they are merciful, and grant you new life."
 	};
 	private static final String[] NOBODY = new String[]{
 		"You fire into the empty room.",
 		"At least no one saw you shoot the wall.",
-		"You shoot the ceiling. Do you hate ceilings?"
+		"You shoot the ceiling. Do you hate ceilings?",
+		"Your paranoia gets to you."
 	};
 	
 	public TAFPSServer(int size, int turnDelay, String seed) throws IOException {
@@ -89,6 +93,8 @@ public class TAFPSServer {
 				if (object instanceof Join) {
 					Player newPlayer = buildPlayer(c.getID());
 					players.add(newPlayer);
+					sendDescription(newPlayer, "You enter a new void.\n" + newPlayer.getDescription());
+					sendInfo(newPlayer);
 					return;
 				}
 				if (object instanceof ActionMessage) {
@@ -118,7 +124,9 @@ public class TAFPSServer {
 						combat(player);
 						break;
 					}
-					sendInfo(player);
+					for (Player worldmate : players) {
+						sendInfo(worldmate);
+					}
 					server.sendToTCP(player.id, new Wait());
 					player.waiting = true;
 					player.lastMoveTime = System.currentTimeMillis();
@@ -145,34 +153,67 @@ public class TAFPSServer {
 	}
 	
 	public void combat(Player attacker) {
-		List<Player> playersAtDestination = getPlayersOn(attacker.getX(), attacker.getY());
-		if (attacker.getAmmo() == 0) {
-			sendDescription(attacker, EMPTY[rng.nextInt(EMPTY.length)]);
-		} else {
+		int x = attacker.getX();
+		int y = attacker.getY();
+		Player defender = null;
+		List<Player> players = getPlayersOn(x, y);
+		for (Player player : players) {
+			if (player != attacker) {
+				defender = player;
+				break;
+			}
+		}
+		if (defender == null) {
+			sendDescription(attacker, NOBODY[rng.nextInt(NOBODY.length)]);
+			return;
+		}
+		boolean attackShot = attacker.getAmmo() > 0;
+		boolean defendShot = defender.getAmmo() > 0;
+		if (attackShot) {
 			attacker.shoot();
 		}
-		if (playersAtDestination.size() == 1) {
-			sendDescription(attacker, NOBODY[rng.nextInt(NOBODY.length)]);
+		if (defendShot) {
+			defender.shoot();
 		}
-		for (Player player : playersAtDestination) {
-			int x = player.getX();
-			int y = player.getY();
-			if (!player.equals(attacker)) {
-				int attackerAdvantage = attacker.getAdvantage() + rng.nextInt(6);
-				int defenderAdvantage = player.getAdvantage() + map.getRoom(x, y).getAdvantage() + rng.nextInt(6);
-				Log.info(LOG_CATEGORY,
-					"Player " + attacker.id + ": attack (" + attackerAdvantage + ") to "
-					+ "Player " + player.id + " (" + defenderAdvantage + ")");
-				if (attacker.getAmmo() != 0 && attackerAdvantage <= defenderAdvantage) {
-					sendDescription(attacker, MISS[rng.nextInt(MISS.length)]);
-					sendDescription(player, SHOT_AT[rng.nextInt(SHOT_AT.length)]);
-				} else {
-					sendDescription(attacker, KILL[rng.nextInt(KILL.length)]);
-					sendDescription(player, DEATH[rng.nextInt(DEATH.length)]);
-					int playerID = player.id;
-					player = buildPlayer(playerID);
-				}
-				break;
+		int attackAdvantage =
+			attacker.getAdvantage() + rng.nextInt(4) + ((attackShot) ? (2) : (0));
+		int defendAdvantage =
+			defender.getAdvantage() + map.getRoom(x, y).getAdvantage() + rng.nextInt(4) + ((defendShot) ? (2) : (0));
+		Log.info(LOG_CATEGORY, 
+			"Player " + attacker.id + " (" + attackAdvantage + ") against " +
+			"Player " + defender.id + " (" + defendAdvantage + ")");
+		if (attackAdvantage > defendAdvantage + 2) {
+			if (attackShot) {
+				sendDescription(attacker, KILL_SHOT[rng.nextInt(KILL_SHOT.length)]);
+			} else {
+				sendDescription(attacker, KILL_PUNCH[rng.nextInt(KILL_SHOT.length)]);
+			}
+			sendDescription(defender, DEATH[rng.nextInt(DEATH.length)]);
+			attacker.setAmmo(attacker.getAmmo() + defender.getAmmo());
+			server.sendToTCP(defender.id, new Death());
+			players.remove(defender);
+			sendInfo(attacker);
+		} else if (defendAdvantage > attackAdvantage + 2) {
+			if (defendShot) {
+				sendDescription(defender, KILL_SHOT[rng.nextInt(KILL_SHOT.length)]);
+			} else {
+				sendDescription(defender, KILL_PUNCH[rng.nextInt(KILL_SHOT.length)]);
+			}
+			sendDescription(attacker, DEATH[rng.nextInt(DEATH.length)]);
+			defender.setAmmo(attacker.getAmmo() + defender.getAmmo());
+			server.sendToTCP(attacker.id, new Death());
+			players.remove(attacker);
+			sendInfo(defender);
+		} else {
+			if (attackShot) {
+				sendDescription(defender, SHOT_AT[rng.nextInt(SHOT_AT.length)]);
+			} else {
+				sendDescription(defender, PUNCHED_AT[rng.nextInt(PUNCHED_AT.length)]);
+			}
+			if (defendShot) {
+				sendDescription(attacker, SHOT_AT[rng.nextInt(SHOT_AT.length)]);
+			} else {
+				sendDescription(attacker, PUNCHED_AT[rng.nextInt(PUNCHED_AT.length)]);
 			}
 		}
 	}
@@ -219,8 +260,6 @@ public class TAFPSServer {
 	
 	public Player buildPlayer(int id) {
 		Player newPlayer = new Player(rng.nextInt(map.size), rng.nextInt(map.size), id, rng);
-		sendDescription(newPlayer, "You enter a new void.\n" + newPlayer.getDescription());
-		sendInfo(newPlayer);
 		return newPlayer;
 	}
 	
@@ -242,11 +281,12 @@ public class TAFPSServer {
 	public void sendInfo(Player player) {
 		InfoMessage info = new InfoMessage();
 		info.message =
-			"Direction: " + Player.DIRECTIONS[player.getDirection()] +
+			Player.DIRECTIONS[player.getDirection()] +
 			"  /  Location: (" + player.getX() + ", " + player.getY() + ")" +
-			"  /  Ammunition: " + player.getAmmo() + 
+			"  /  Ammo: " + player.getAmmo() + 
 			"  /  Advantage: " + player.getAdvantage() +
-			"  /  Room Bonus: " + map.getRoom(player.getX(), player.getY()).getAdvantage();
+			"  /  Room Bonus: " + map.getRoom(player.getX(), player.getY()).getAdvantage() +
+			"  /  Humans: " + getPlayersOn(player.getX(), player.getY()).size();
 		server.sendToTCP(player.id, info);
 	}
 	

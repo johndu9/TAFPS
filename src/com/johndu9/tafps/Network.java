@@ -13,6 +13,7 @@ public class Network {
 		kryo.register(Join.class);
 		kryo.register(Wait.class);
 		kryo.register(Resume.class);
+		kryo.register(Death.class);
 		kryo.register(ActionMessage.class);
 		kryo.register(DescriptionMessage.class);
 		kryo.register(InfoMessage.class);
@@ -25,6 +26,9 @@ public class Network {
 	}
 	
 	public static class Resume {
+	}
+	
+	public static class Death {
 	}
 	
 	public static class ActionMessage {

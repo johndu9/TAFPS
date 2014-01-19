@@ -2,11 +2,9 @@ package com.johndu9.tafps;
 
 import java.util.Random;
 
-import com.johndu9.tafps.room.Attribute;
-
 public class Player {
 	
-	public static final int MAX_AMMO = 24;
+	public static final int MAX_AMMO = 8;
 	private int x;
 	private int y;
 	private int direction;
@@ -45,6 +43,16 @@ public class Player {
 	public int getAmmo() {
 		return ammo;
 	}
+
+	public void setAmmo(int ammo) {
+		this.ammo = ammo;
+	}
+	
+	public void shoot() {
+		if (getAmmo() > 0) {
+			setAmmo(getAmmo() - 1);
+		}
+	}
 	
 	public int getDirection() {
 		return direction;
@@ -67,19 +75,8 @@ public class Player {
 		this.y += y;
 	}
 	
-	public void charge(int x, int y) {
-		move(x, y);
-		shoot();
-	}
-	
-	public void shoot() {
-		if (ammo > 0) {
-			ammo--;
-		}
-	}
-	
 	public String getDescription() {
-		return description + "You have " + ammo + " shots left in your gun. ";
+		return description;
 	}
 	
 	public int getAdvantage() {

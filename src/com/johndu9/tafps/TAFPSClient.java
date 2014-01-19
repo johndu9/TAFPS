@@ -19,6 +19,7 @@ import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.johndu9.tafps.Network.ActionMessage;
+import com.johndu9.tafps.Network.Death;
 import com.johndu9.tafps.Network.DescriptionMessage;
 import com.johndu9.tafps.Network.InfoMessage;
 import com.johndu9.tafps.Network.Join;
@@ -44,7 +45,7 @@ public class TAFPSClient extends JFrame implements MouseListener, MouseMotionLis
 	private Client client;
 	
 	public TAFPSClient(String server) {
-		super("Transparent Window");
+		super("TAFPS");
 		try {
 			robot = new Robot();
 		} catch (AWTException e) {
@@ -116,18 +117,29 @@ public class TAFPSClient extends JFrame implements MouseListener, MouseMotionLis
 					waiting = false;
 					return;
 				}
+				if (object instanceof Death) {
+					client.stop();
+					infoField.setText("\\ to return to life");
+					return;
+				}
 			}
 
 			public void disconnected (Connection c) {
 				appendln("You return to the void.");
 			}
 		});
+		tryReconnect();
+	}
+	
+	public void tryReconnect() {
 		while (!client.isConnected()){
 			new Thread("Connect") {
 				public void run () {
 					try {
+						client.start();
 						client.connect(5000, host, Network.TCPPORT, Network.UDPPORT);
 					} catch (IOException e) {
+						appendln("Your attempt to regain life proves futile. You will try again later.");
 						System.out.println("Could not connect.");
 						System.out.println("Attempting to reconnect in 5 seconds.");
 					}
@@ -202,6 +214,11 @@ public class TAFPSClient extends JFrame implements MouseListener, MouseMotionLis
 				appendln("You walk right.");
 				sendAction("mr");
 			}
+			if (oldChar == '\\') {
+				appendln("You attempt to return to life.");
+				client.stop();
+				tryReconnect();
+			}
 		}
 	}
 
@@ -220,7 +237,7 @@ public class TAFPSClient extends JFrame implements MouseListener, MouseMotionLis
 	@Override
 	public void mousePressed(MouseEvent e) {
 		if (e.getButton() == 1) {
-			appendln("You open fire.");
+			appendln("You attack.");
 			sendAction("f");
 		}
 	}
